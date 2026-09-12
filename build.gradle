@@ -1,0 +1,81 @@
+// Сборка на Gradle — тот же код и те же тесты, что и в Maven.
+// Основной способ на занятии — Maven (`mvn test`); Gradle здесь как второй вариант,
+// чтобы увидеть: код и тесты одни, систем сборки — две.
+plugins {
+    id 'java'
+    id 'jacoco'
+}
+
+group = 'ru.mts.itmo.aqa'
+version = '1.0.0'
+
+java {
+    toolchain {
+        // Gradle сам найдёт (или скачает) JDK 21 — версию Java на машине можно не настраивать.
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+// Отдельная конфигурация для AspectJ-агента: без него не работают @Step и @Attachment Allure.
+configurations {
+    aspectj
+}
+
+dependencies {
+    // JUnit 5 (Jupiter)
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    // AssertJ: fluent-проверки и SoftAssertions
+    testImplementation 'org.assertj:assertj-core:3.26.3'
+    // Allure: слушатель JUnit 5 сам пишет build/allure-results
+    testImplementation 'io.qameta.allure:allure-junit5:2.29.0'
+
+    // AspectJ weaver — подключается как javaagent (см. блок test ниже)
+    aspectj 'org.aspectj:aspectjweaver:1.9.22.1'
+    // Начиная с Gradle 9 launcher нужно объявлять явно
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+def allureResultsDir = layout.buildDirectory.dir('allure-results').get().asFile
+
+test {
+    // Прогон по тегу (практика 2):  ./gradlew test -Pgroups=my
+    def tagFilter = (project.findProperty('groups') ?: project.findProperty('tags'))?.toString()?.trim()
+
+    useJUnitPlatform {
+        if (tagFilter) {
+            tagFilter.split(',').each { includeTags it.trim() }
+        }
+    }
+    if (tagFilter) {
+        filter {
+            // тег-прогон без совпадений не должен ронять сборку
+            failOnNoMatchingTests = false
+        }
+    }
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
+    // куда писать результаты Allure
+    systemProperty 'allure.results.directory', allureResultsDir.absolutePath
+    // подключаем AspectJ-агент
+    doFirst {
+        jvmArgs "-javaagent:${configurations.aspectj.singleFile}"
+    }
+    finalizedBy jacocoTestReport
+}
+
+// Отчёт о покрытии: build/reports/jacoco/test/html/index.html
+jacocoTestReport {
+    dependsOn test
+    reports {
+        html.required = true
+        xml.required = true
+    }
+}
+
+// Отчёт Allure строится внешним CLI:  allure serve build/allure-results

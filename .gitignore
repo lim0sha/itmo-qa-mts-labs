@@ -1,0 +1,9 @@
+target/
+build/
+.gradle/
+*.class
+.idea/
+*.iml
+# отчёты прогонов
+allure-results/
+allure-report/
