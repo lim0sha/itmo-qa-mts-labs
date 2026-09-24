@@ -63,6 +63,8 @@ class PasswordPolicyTest {
         @ParameterizedTest(name = "длина {1}: пароль \"{0}\"")
         @MethodSource("lengthBoundaries")
         @DisplayName("Границы длины")
+        // Регресс на дефект из PasswordPolicyTest-баги.md (баг 1):
+        // пароль ровно 64 символа не должен помечаться как TOO_LONG.
         void lengthBoundariesShouldReturnExpectedViolation(String password, int length, PasswordPolicy.Violation expected) {
             List<PasswordPolicy.Violation> violations = policy.check(password).violations();
             if (expected != null) {
@@ -196,6 +198,8 @@ class PasswordPolicyTest {
         @ParameterizedTest(name = "серия в \"{0}\" - срабатывает: {1}")
         @MethodSource("runs")
         @DisplayName("Границы серии")
+        // Регресс на дефект из PasswordPolicyTest-баги.md (баг 2):
+        // серия ровно из трёх символов должна давать REPEATED_RUN.
         void runLengthShouldReturnExpectedViolation(String password, boolean fires) {
             List<PasswordPolicy.Violation> violations = violations(password);
             if (fires) {
@@ -255,6 +259,8 @@ class PasswordPolicyTest {
         @ParameterizedTest(name = "\"{0}\" другим регистром")
         @MethodSource("blacklistedWords")
         @DisplayName("другой регистр")
+        // Регресс на дефект из PasswordPolicyTest-баги.md (баг 3):
+        // блеклист должен проверяться без учёта регистра.
         void blacklistedPasswordOtherCaseShouldReturnBlacklistedError(String word) {
             assertThat(violations(word.toUpperCase())).contains(BLACKLISTED);
         }
