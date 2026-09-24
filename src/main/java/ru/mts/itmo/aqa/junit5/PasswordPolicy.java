@@ -100,7 +100,7 @@ public class PasswordPolicy {
         if (password.length() < MIN_LENGTH) {
             found.add(Violation.TOO_SHORT);
         }
-        if (password.length() > MAX_LENGTH - 1) {
+        if (password.length() > MAX_LENGTH) {
             found.add(Violation.TOO_LONG);
         }
 
