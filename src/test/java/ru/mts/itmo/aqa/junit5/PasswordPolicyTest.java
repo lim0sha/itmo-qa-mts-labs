@@ -165,8 +165,20 @@ class PasswordPolicyTest {
 
         @Test
         @DisplayName("перенос строки")
-        void passwordWithNewlineShouldNotReturnHasWhitespaceError() {
-            assertThat(violations("Aa1\nbcde")).doesNotContain(HAS_WHITESPACE);
+        void passwordWithNewlineShouldReturnHasWhitespaceError() {
+            assertThat(violations("Aa1\nbcde")).contains(HAS_WHITESPACE);
+        }
+
+        @Test
+        @DisplayName("возврат каретки")
+        void passwordWithCarriageReturnShouldReturnHasWhitespaceError() {
+            assertThat(violations("Aa1\rbcde")).contains(HAS_WHITESPACE);
+        }
+
+        @Test
+        @DisplayName("перевод страницы")
+        void passwordWithFormFeedShouldReturnHasWhitespaceError() {
+            assertThat(violations("Aa1\fbcde")).contains(HAS_WHITESPACE);
         }
     }
 
