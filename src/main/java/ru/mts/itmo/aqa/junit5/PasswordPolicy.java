@@ -146,7 +146,7 @@ public class PasswordPolicy {
             found.add(Violation.CONTAINS_LOGIN);
         }
 
-        if (BLACKLIST.contains(password)) {
+        if (BLACKLIST.contains(password.toLowerCase())) {
             found.add(Violation.BLACKLISTED);
         }
 
