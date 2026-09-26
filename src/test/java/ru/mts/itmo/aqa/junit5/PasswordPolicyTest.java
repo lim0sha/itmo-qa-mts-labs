@@ -3,6 +3,11 @@ package ru.mts.itmo.aqa.junit5;
 import java.util.List;
 import java.util.stream.Stream;
 
+import io.qameta.allure.Attachment;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Step;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -25,20 +30,34 @@ import static ru.mts.itmo.aqa.junit5.PasswordPolicy.Violation.REPEATED_RUN;
 import static ru.mts.itmo.aqa.junit5.PasswordPolicy.Violation.TOO_LONG;
 import static ru.mts.itmo.aqa.junit5.PasswordPolicy.Violation.TOO_SHORT;
 
+@Epic("ДЗ №1: PasswordPolicy по спецификации")
+@Feature("Проверка пароля по правилам")
 @DisplayName("PasswordPolicy по спецификации")
 class PasswordPolicyTest {
 
     private final PasswordPolicy policy = new PasswordPolicy();
 
+    @Step("Проверяем пароль \"{password}\"")
     private List<PasswordPolicy.Violation> violations(String password) {
-        return policy.check(password).violations();
+        List<PasswordPolicy.Violation> result = policy.check(password).violations();
+        attachViolations(password, result);
+        return result;
     }
 
+    @Step("Проверяем пароль \"{password}\" с логином \"{login}\"")
     private List<PasswordPolicy.Violation> violations(String password, String login) {
-        return policy.check(password, login).violations();
+        List<PasswordPolicy.Violation> result = policy.check(password, login).violations();
+        attachViolations(password + " (логин '" + login + "')", result);
+        return result;
+    }
+
+    @Attachment(value = "Нарушения для \"{what}\"", type = "text/plain")
+    private String attachViolations(String what, List<PasswordPolicy.Violation> violations) {
+        return violations.toString();
     }
 
     @Test
+    @Story("Пароль null")
     @DisplayName("null - исключение")
     void nullPasswordShouldThrowIllegalArgumentException() {
         assertThatThrownBy(() -> policy.check(null))
@@ -46,6 +65,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Длина пароля")
     @DisplayName("TOO_SHORT / TOO_LONG")
     class LengthTests {
 
@@ -76,6 +96,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Цифры")
     @DisplayName("NO_DIGIT")
     class NoDigitTests {
 
@@ -93,6 +114,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Заглавные латинские буквы")
     @DisplayName("NO_UPPER")
     class NoUpperTests {
 
@@ -110,6 +132,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Строчные латинские буквы")
     @DisplayName("NO_LOWER")
     class NoLowerTests {
 
@@ -127,6 +150,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Спецсимволы")
     @DisplayName("NO_SPECIAL")
     class NoSpecialTests {
 
@@ -144,6 +168,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Пробельные символы")
     @DisplayName("HAS_WHITESPACE")
     class HasWhitespaceTests {
 
@@ -185,6 +210,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Повторяющиеся символы")
     @DisplayName("REPEATED_RUN")
     class RepeatedRunTests {
 
@@ -211,6 +237,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Логин в пароле")
     @DisplayName("CONTAINS_LOGIN")
     class ContainsLoginTests {
 
@@ -242,6 +269,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Чёрный список")
     @DisplayName("BLACKLISTED")
     class BlacklistTests {
 
@@ -273,6 +301,7 @@ class PasswordPolicyTest {
     }
 
     @Nested
+    @Story("Сквозные проверки")
     @DisplayName("Сквозные проверки")
     class CompositeTests {
 
