@@ -8,7 +8,7 @@
 
 ```bash
 cd code/demo-junit
-mvn clean test        # 22 теста зелёные, 1 пропущен (@Disabled — так и задумано)
+mvn clean test        # 60 тестов зелёные
 ./test-summary.sh     # компактный итог: что прогналось и какое покрытие по классам
 ```
 
@@ -49,7 +49,7 @@ src/test/java/ru/mts/itmo/aqa/junit5/   сами тесты
 | `AgeValidator` | `isValid(age)` — допустимы 18…65 включительно | демо: параметризация и границы |
 | `FizzBuzz` | `convert(n)` — Fizz / Buzz / FizzBuzz | демо: `@MethodSource` |
 | `PasswordStrength` | `of(length)` → `WEAK` / `MEDIUM` / `STRONG` / `TOO_LONG` | **цель практик семинара**, тестов нет |
-| `PasswordPolicy` | `check(password[, login])` → список нарушений | **домашнее задание**, тестов нет |
+| `PasswordPolicy` | `check(password[, login])` → список нарушений | **домашнее задание**, покрыт тестами ≈ 98 % |
 
 ### Тесты, которые уже есть (демо с занятия)
 
@@ -61,9 +61,12 @@ src/test/java/ru/mts/itmo/aqa/junit5/   сами тесты
 | `AssertionsDemoTest` | JUnit-assertions, AssertJ, `SoftAssertions` |
 | `ParameterizedDemoTest` | `@ValueSource`, `@CsvSource`, `@MethodSource` |
 | `AllureDemoTest` | `@Epic`/`@Feature`/`@Story`, `@Step`, `@Attachment` — образец разметки для ДЗ |
+| `PasswordPolicyTest` | **домашнее задание**: тест-сьют PasswordPolicy по спецификации |
 
-Свои тесты вы создаёте в том же пакете: `PasswordStrengthTest` (практики семинара) и
-`PasswordPolicyTest` (домашнее задание).
+Свои тесты вы создаёте в том же пакете: `PasswordStrengthTest` (практики семинара). Домашнее
+задание по `PasswordPolicy` сдано: тест-сьют в `PasswordPolicyTest`, найденные дефекты и их
+фиксы описаны в `PasswordPolicyTest-баги.md`, подтверждение «тест до фикса» лежит в истории
+ветки `lab-1`, скриншоты Allure и Jacoco — в `allure.png` и `jacoco.png`.
 
 ## Команды
 
@@ -72,6 +75,7 @@ src/test/java/ru/mts/itmo/aqa/junit5/   сами тесты
 | Все тесты | `mvn test` | `./gradlew test` |
 | Полный прогон с пересчётом покрытия | `mvn clean test` | `./gradlew clean test` |
 | Только свой класс | `mvn test -Dtest=PasswordStrengthTest` | `./gradlew test --tests '*PasswordStrengthTest'` |
+| Тест-сьют ДЗ | `mvn test -Dtest=PasswordPolicyTest` | — |
 | Только свой тег | `mvn test -Dgroups=my` | `./gradlew test -Pgroups=my` |
 | Итог последнего прогона | `./test-summary.sh` | — |
 | Отчёт покрытия | `target/site/jacoco/index.html` | `build/reports/jacoco/test/html/index.html` |
@@ -93,9 +97,9 @@ Terminal → Run Task (⇧⌘P / Ctrl+Shift+P → «Tasks: Run Task»), откр
 ## Про цифры покрытия
 
 Сводный процент по проекту низкий (порядка 15 %) — и это нормально: в проекте специально
-живут классы без тестов. `PasswordStrength` — цель практик семинара, `PasswordPolicy` —
-домашнее задание, оба в отчёте красные (0 %). Отсюда главный вывод занятия: **сводная цифра
-покрытия почти всегда врёт, смотреть надо по классам.**
+живут классы без тестов. `PasswordStrength` — цель практик семинара и остаётся красным
+(0 %), а `PasswordPolicy` после сдачи ДЗ покрыт тестами (ветви ≈ 98 %). Отсюда главный
+вывод занятия: **сводная цифра покрытия почти всегда врёт, смотреть надо по классам.**
 
 `Calculator` и `AgeValidator` покрыты демо-тестами не полностью (у `Calculator` не проверен
 `minus` и «счастливый» путь деления, у `AgeValidator` — не все ветки). На слайде семинара
