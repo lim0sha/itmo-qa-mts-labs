@@ -1,0 +1,17 @@
+﻿Configuration:
+  Appenders:
+    Console:
+      name: STDOUT
+      target: SYSTEM_OUT
+      PatternLayout:
+        pattern: "%d{HH:mm:ss.SSS} [%level] %c{1} - %msg%n"
+  Loggers:
+    Root:
+      level: info
+      AppenderRef:
+        ref: STDOUT
+    Logger:
+      - name: ru.mts.itmo.aqa
+        level: info
+      - name: io.restassured
+        level: warn

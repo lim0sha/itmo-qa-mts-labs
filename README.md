@@ -199,7 +199,7 @@ src/test/java/ru/mts/itmo/aqa/api/
     LastExchange.java
     SandboxSessionFilter.java
 src/test/resources/
-  simplelogger.properties
+  log4j2.yaml
 ```
 
 Исходники лежат в `src/test/java`: проверяемого кода, кроме тестов, в задании нет, а основной

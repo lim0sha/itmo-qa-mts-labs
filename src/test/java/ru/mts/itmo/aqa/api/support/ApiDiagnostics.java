@@ -4,12 +4,12 @@ import java.util.Optional;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestWatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class ApiDiagnostics implements TestWatcher, BeforeEachCallback {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApiDiagnostics.class);
+    private static final Logger LOGGER = LogManager.getLogger(ApiDiagnostics.class);
 
     @Override
     public void beforeEach(ExtensionContext context) {
