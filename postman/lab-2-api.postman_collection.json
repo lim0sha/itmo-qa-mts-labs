@@ -210,6 +210,7 @@
                   "});",
                   "",
                   "pm.test('token is handed to the next request', function () {",
+                  "    pm.collection.set('access_token', body.access_token);",
                   "    pm.environment.set('access_token', body.access_token);",
                   "});"
                 ]
