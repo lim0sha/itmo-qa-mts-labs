@@ -12,7 +12,7 @@ mvn test
 
 ## API
 
-REST — `https://playground.nileslabs.com/api/v1`
+REST - `https://playground.nileslabs.com/api/v1`
 
 | Запрос | Проверки |
 | --- | --- |
@@ -25,7 +25,7 @@ REST — `https://playground.nileslabs.com/api/v1`
 
 Логин стенда: `Bret` / `Password@123`. Пароль из задания (`password123`) стенд не принимает.
 
-GraphQL — `https://graphql.postman-echo.com/graphql`
+GraphQL - `https://graphql.postman-echo.com/graphql`
 
 | Операция | Проверки |
 | --- | --- |
@@ -38,8 +38,8 @@ GraphQL — `https://graphql.postman-echo.com/graphql`
 | Тест | Сценарий |
 | --- | --- |
 | `ApiInfrastructureTest` | доступность стендов, изоляция сессии, дефолты конфигурации |
-| `rest/ChainedPostPatchGetTest` | `POST` → `id` → `PATCH` → `GET` |
-| `rest/AuthTokenScenarioTest` | логин → токен → `GET /auth/me`, негативный сценарий |
+| `rest/ChainedPostPatchGetTest` | `POST` => `id` => `PATCH` => `GET` |
+| `rest/AuthTokenScenarioTest` | логин => токен => `GET /auth/me`, негативный сценарий |
 | `rest/RestNegativeScenarioTest` | негативные REST-кейсы, параметризованные |
 | `graphql/GraphqlQueryTest` | query |
 | `graphql/GraphqlMutationTest` | mutation, включая необязательный `age` |
@@ -49,8 +49,8 @@ GraphQL — `https://graphql.postman-echo.com/graphql`
 
 ## Subscription
 
-В RestAssured не автоматизируется. Коллекция — `postman/lab-2-api.postman_collection.json`.
+В RestAssured не автоматизируется. Коллекция - `postman/lab-2-api.postman_collection.json`.
 
-1. Postman → Import → файл коллекции.
-2. Выполнить `REST / Login` — запрос сам подставляет полученный токен в переменную `access_token`.
+1. Postman => Import => файл коллекции.
+2. Выполнить `REST / Login` - запрос сам подставляет полученный токен в переменную `access_token`.
 3. Отправить `GraphQL / Subscription - greetings (SSE)`.
