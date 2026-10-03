@@ -1,0 +1,312 @@
+{
+  "info": {
+    "_postman_id": "66eee3af-eac2-48ba-ab07-5dae8fd3c433",
+    "name": "Lab 2 - REST and GraphQL API",
+    "description": "Companion collection for homework #2 (automated testing of REST and GraphQL APIs).\n\nThe Java tests in `src/test/java` cover every block automatically except the GraphQL\n**subscription**, which is a long-lived SSE stream and is meant to be exercised here.\n\n### How to use\n1. Import this file: Postman -> Import -> select this JSON.\n2. Open the collection environment and confirm `restBaseUrl`, `graphqlUrl`, `username`, `password`.\n   `access_token` must stay empty: the *Login* request fills it in during the run.\n3. Run **REST / Login** first, then **REST / Current user**.\n4. Send **GraphQL / Subscription (SSE)** last and watch the response pane: the stand streams\n   `event: next` frames and then closes with `event: complete`.\n\n### Expected results\n| Request | Status | Payload |\n| --- | --- | --- |\n| GraphQL / Query | 200 | `data.hello` is a non-empty string, no `errors` |\n| GraphQL / Mutation | 200 | `data.createPerson` carries a generated `id` plus the submitted `name` and `age`, no `errors` |\n| GraphQL / Subscription | 200 | `Content-Type: text/event-stream`, several `data: {\"data\":{\"greetings\":\"...\"}}` frames, ending with `event: complete` |\n| REST / Login | 200 | `access_token` is a non-empty JWT |\n| REST / Current user | 200 | profile of the logged in user |\n| REST / Current user without token | 401 | `message` explains that a valid Bearer token is required |",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GraphQL",
+      "item": [
+        {
+          "name": "Query - hello",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ hello }\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] },
+            "description": "Checks the transport level (200) and the payload: data.hello present, no errors array."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('data.hello is a non-empty string', function () {",
+                  "    pm.expect(body.data).to.have.property('hello');",
+                  "    pm.expect(body.data.hello).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('response carries no errors', function () {",
+                  "    pm.expect(body.errors, JSON.stringify(body)).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Query - request headers",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"{ hello request { headers } }\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] },
+            "description": "Selects two root fields in one operation to prove both selections are resolved."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('both selected fields are filled in', function () {",
+                  "    pm.expect(body.data.hello).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.data.request.headers).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('response carries no errors', function () {",
+                  "    pm.expect(body.errors, JSON.stringify(body)).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mutation - CreatePerson",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"operationName\": \"CreatePerson\",\n  \"query\": \"mutation CreatePerson($person: PersonInput!) {\\n  createPerson(person: $person) {\\n    id\\n    name\\n    age\\n  }\\n}\",\n  \"variables\": {\n    \"person\": {\n      \"name\": \"Postman Person\",\n      \"age\": 34\n    }\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] },
+            "description": "Note the field name is `createPerson` and the argument is `person: PersonInput!`; the capitalised `CreatePerson` from the handout is the operation name, not the field."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('created person carries an id, a name and an age', function () {",
+                  "    pm.expect(body.data.createPerson.id, JSON.stringify(body)).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.data.createPerson.name).to.eql('Postman Person');",
+                  "    pm.expect(body.data.createPerson.age).to.eql(34);",
+                  "});",
+                  "",
+                  "pm.test('response carries no errors', function () {",
+                  "    pm.expect(body.errors, JSON.stringify(body)).to.be.undefined;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subscription - greetings (SSE)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "text/event-stream" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"subscription { greetings }\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{graphqlUrl}}", "host": ["{{graphqlUrl}}"] },
+            "description": "Server-sent events. The `Accept: text/event-stream` header is what makes the stand answer with a stream instead of a single JSON document.\n\nWhat a healthy stream looks like:\n\n```\n:\n\nevent: next\ndata: {\"data\":{\"greetings\":\"Hi\"}}\n\nevent: next\ndata: {\"data\":{\"greetings\":\"Bonjour\"}}\n...\n\nevent: complete\ndata:\n```\n\nThe leading `:` line is the SSE comment that opens the stream, each `event: next` frame carries one greeting, and the stream is closed by `event: complete`. If you only get one JSON object back, the `Accept` header is missing."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('response is an event stream', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/event-stream');",
+                  "});",
+                  "",
+                  "console.log('Streamed body:', pm.response.text());",
+                  "pm.test('stream carries at least one greetings frame', function () {",
+                  "    pm.expect(pm.response.text()).to.include('greetings');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "REST",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": { "raw": "{{restBaseUrl}}/auth/login", "host": ["{{restBaseUrl}}"], "path": ["auth", "login"] },
+            "description": "Stores the issued token in the environment so the next request can use it. No token is ever written into the collection by hand."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('access_token is a non-empty string', function () {",
+                  "    pm.expect(body.access_token, JSON.stringify(body)).to.be.a('string').and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test('token is handed to the next request', function () {",
+                  "    pm.environment.set('access_token', body.access_token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{restBaseUrl}}/auth/me", "host": ["{{restBaseUrl}}"], "path": ["auth", "me"] },
+            "description": "Protected endpoint. Send *Login* first so `{{access_token}}` is populated."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('profile identifies a user', function () {",
+                  "    pm.expect(body.id, JSON.stringify(body)).to.exist;",
+                  "    pm.expect(body.username).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.email).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current user without token (negative)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{restBaseUrl}}/auth/me", "host": ["{{restBaseUrl}}"], "path": ["auth", "me"] },
+            "description": "Same endpoint without the Authorization header. The stand must refuse access."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "const body = pm.response.json();",
+                  "",
+                  "pm.test('refusal explains what is missing', function () {",
+                  "    pm.expect(body.error, JSON.stringify(body)).to.be.a('string').and.not.empty;",
+                  "    pm.expect(body.message.toLowerCase()).to.include('bearer');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "restBaseUrl",
+      "value": "https://playground.nileslabs.com/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "graphqlUrl",
+      "value": "https://graphql.postman-echo.com/graphql",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "Bret",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "Password@123",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
