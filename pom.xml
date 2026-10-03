@@ -19,6 +19,7 @@
 
         <junit.version>5.11.4</junit.version>
         <restassured.version>5.5.0</restassured.version>
+        <jackson.version>2.18.2</jackson.version>
         <surefire.version>3.5.2</surefire.version>
     </properties>
 
@@ -38,9 +39,16 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.24.3</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.16</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
