@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image from repository
+        run: docker build -t api-test .
+
+  test:
+    name: Run API tests inside container
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image from repository
+        run: docker build -t api-test .
+      - name: Run API tests
+        run: docker run --rm api-test
