@@ -1,4 +1,4 @@
-# ДЗ №3: Docker и CI/CD для API-автотестов
+# API-тесты: REST/GraphQL, Docker/CI и нагрузочное тестирование
 
 ## Запуск
 
@@ -79,3 +79,12 @@ GraphQL - `https://graphql.postman-echo.com/graphql`
 1. Postman => Import => файл коллекции.
 2. Выполнить `REST / Login` - запрос сам подставляет полученный токен в переменную `access_token`.
 3. Отправить `GraphQL / Subscription - greetings (SSE)`.
+
+## Нагрузочное тестирование (ДЗ №4)
+
+JMeter-план, CSV с данными, JTL трёх запусков, HTML Report и анализ метрик -
+в [`load-tests/README.md`](load-tests/README.md).
+
+Кратко: 5/10/20 пользователей, ramp-up 5/10/20 с, 60 с, think time 1 с,
+два read-only запроса к demo-REST API Postman Echo. Throughput растёт
+3.9 → 7.9 → 14.2 req/s, p95 в прогретом режиме 205–216 мс, ошибок нет.
