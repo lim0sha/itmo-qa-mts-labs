@@ -1,162 +1,65 @@
-# ДЗ №4: Нагрузочное тестирование REST API в JMeter
+# ДЗ №4: нагрузочное тестирование REST API
 
-Нагрузочный сценарий для REST API Postman Echo: `https://postman-echo.com`.
-Это демонстрационный сервис, предназначенный для отладки и тестирования
-HTTP-запросов; в проекте он уже используется для GraphQL
-(`graphql.postman-echo.com`).
-
-Почему не стенд из ДЗ №2–3: `playground.nileslabs.com` отдаёт заголовки
-`Ratelimit-Limit: 60` и `Ratelimit-Policy: 60;w=60`, то есть не более
-60 запросов в минуту на IP (~1 req/s). На трёх уровнях нагрузки это даёт
-`429 Too Many Requests` почти на всех запросах, поэтому для сравнения
-производительности выбран demo-endpoint без такого лимита. Нагрузка при этом
-небольшая: максимум 20 виртуальных пользователей и ~14 req/s.
-
-## Состав
-
-| Файл | Назначение |
-| --- | --- |
-| `load-test.jmx` | JMeter Test Plan |
-| `posts.csv` | Данные параметризации: `postId`, `pageSize` |
-| `run-load-test.ps1` | Запуск всех профилей и генерация отчёта в Windows |
-| `run-load-test.sh` | То же для Linux/macOS |
-| `results/run-5-users.jtl` | Результаты запуска на 5 пользователях |
-| `results/run-10-users.jtl` | Результаты запуска на 10 пользователях |
-| `results/run-20-users.jtl` | Результаты итогового запуска на 20 пользователях |
-| `report/index.html` | HTML Report итогового запуска (20 пользователей) |
+**Стенд:** `https://postman-echo.com`. Стенд из ДЗ №2-3 не использован: `playground.nileslabs.com` ограничивает 60 запросов/мин на IP и на нагрузке отдаёт `429`. Нагрузка на demo-сервис: 5-20 VU, до ~14 req/s.
 
 ## Сценарий
 
-Test Plan содержит один Thread Group и два GET-запроса:
+Два read-only запроса:
 
-1. `GET /get?postId=${postId}&limit=${pageSize}` — параметры в query string;
-2. `GET /headers` — параметры передаются заголовками `X-Post-Id: ${postId}`
-   и `X-Page-Size: ${pageSize}`, сервис возвращает их в теле ответа.
-
-Для каждого запроса добавлены Response Assertion:
-
-- код ответа строго `200`;
-- в первом запросе тело содержит `"postId":"${postId}"` и
-  `"limit":"${pageSize}"`;
-- во втором запросе тело содержит `"x-post-id":"${postId}"` и
-  `"x-page-size":"${pageSize}"`.
-
-Параметризация — `CSV Data Set Config` (`posts.csv`, 20 строк, `recycle=true`).
-Значения `postId` и `pageSize` подставляются через `${postId}` и `${pageSize}`.
-
-Think time — `Constant Timer`, по умолчанию **1000 мс** между запросами.
-Значение можно переопределить через `-JthinkTime=<мс>`.
-
-Keep-alive включён; HTTP-запросы идут по HTTPS с общим `User-Agent`.
-
-Профиль задаётся параметрами JMeter (`-J...`), поэтому один и тот же `.jmx`
-используется для всех запусков:
-
-| Параметр | По умолчанию | Смысл |
+| Запрос | Параметры | Проверки |
 | --- | --- | --- |
-| `users` | `10` | число виртуальных пользователей |
-| `rampup` | `10` | ramp-up, секунды |
-| `duration` | `60` | длительность, секунды |
-| `thinkTime` | `1000` | пауза между запросами, мс |
+| `GET /get` | query `postId`, `limit` | status 200; `$.args.postId`, `$.args.limit` |
+| `GET /headers` | headers `X-Post-Id`, `X-Page-Size` | status 200; `$.headers.x-post-id`, `$.headers.x-page-size` |
 
-## Запуск
+Данные: `posts.csv` (20 строк, `postId`/`pageSize`, recycle). Think time: **1000 мс**. Профили: 5/10/20 VU, ramp-up 5/10/20 с, длительность 60 с.
 
-Требуется Apache JMeter 5.6.x и JDK 8+ (проверено на JMeter 5.6.3, JDK 21).
-`jmeter` должен быть в `PATH` либо задан `JMETER_HOME`.
+## JMeter
 
-Windows:
+Файлы: `load-test.jmx`, `posts.csv`, `results/run-*.jtl`, [HTML-отчёт (20 VU)](report/index.html).
 
-```powershell
-.\load-tests\run-load-test.ps1
-```
-
-Linux/macOS:
-
-```bash
-./load-tests/run-load-test.sh
-```
-
-Скрипты последовательно выполняют три профиля и генерируют HTML Report по
-последнему запуску. Пути к `.jmx` и CSV относительные, ручная правка не нужна.
-
-Отдельный запуск с произвольным профилем:
-
-```bash
-jmeter -n -t load-tests/load-test.jmx -l load-tests/results/run-15-users.jtl \
-  -Jusers=15 -Jrampup=15 -Jduration=60 -JthinkTime=1000
-```
-
-HTML Report по готовому JTL:
-
-```bash
-jmeter -g load-tests/results/run-20-users.jtl -o load-tests/report
-```
-
-План также открывается в GUI JMeter (`load-test.jmx`), CSV подхватывается
-относительно файла плана.
-
-## Профиль нагрузки
-
-Все запуски: длительность 60 с, think time 1000 мс, ramp-up равен числу
-пользователей. Запуски выполнены последовательно 29.10.2026.
-
-| Запуск | Пользователи | Ramp-up | JTL |
-| --- | --- | --- | --- |
-| 1 | 5 | 5 с | `results/run-5-users.jtl` |
-| 2 | 10 | 10 с | `results/run-10-users.jtl` |
-| 3 | 20 | 20 с | `results/run-20-users.jtl` |
-
-## Результаты
-
-| Нагрузка | Запросов | Throughput, req/s | Average, мс | Median, мс | p95, мс | Error Rate |
+| VU | Запросов | Throughput, req/s | Average, мс | Median, мс | p95, мс | Errors |
 | --- | --- | --- | --- | --- | --- | --- |
-| 5 users | 230 | 3.9 | 241.8 | 202 | 528 | 0.0% |
-| 10 users | 462 | 7.9 | 185.1 | 177 | 205 | 0.0% |
-| 20 users | 837 | 14.2 | 187.9 | 180 | 216 | 0.0% |
+| 5 | 230 | 3.9 | 241.8 | 202 | 528 | 0% |
+| 10 | 462 | 7.9 | 185.1 | 177 | 205 | 0% |
+| 20 | 837 | 14.2 | 187.9 | 180 | 216 | 0% |
 
-Метрики посчитаны по JTL; для 20 пользователей они совпадают с Total в
-HTML Report (`14.20 req/s`, average `187.9 мс`, median `180 мс`,
-p95 `216 мс`, error rate `0%`).
+![JMeter HTML Report](images/jmeter-summary.png)
 
-Итоговый HTML Report: [`report/index.html`](report/index.html).
+## Gatling (бонус)
 
-## Анализ
+Модуль `gatling/`: Gatling 3.16.0, Java DSL, Maven, тот же endpoint, запросы, проверки, CSV и паузы. Профиль передаётся через `-Dusers/-Drampup/-Dduration`:
 
-**Throughput.** Пропускная способность растёт практически линейно с числом
-пользователей: 3.9 → 7.9 → 14.2 req/s. При удвоении нагрузки с 5 до 10
-пользователей Throughput вырос в 2.0 раза, с 10 до 20 — в 1.8 раза.
-Признаков насыщения в выбранном диапазоне нет.
+```bash
+cd load-tests/gatling
+mvn gatling:test -Dusers=20 -Drampup=20 -Dduration=60
+```
 
-**Время отклика и перцентили.** Медиана держится в диапазоне 177–202 мс,
-p95 — 205–528 мс. Наибольший p95 в первом запуске (528 мс) объясняется
-холодным стартом и ramp-up: первые запросы занимают до 1.5 с. В прогретых
-запусках на 10 и 20 пользователях p95 практически одинаковый (205 и 216 мс),
-то есть роста latency при увеличении нагрузки не наблюдается.
+Или все три профиля: `.\run-gatling.ps1` / `./run-gatling.sh`.
 
-**Ошибки.** Error Rate во всех трёх запусках — 0%. Ответы `429` и таймауты
-отсутствуют; все Response Assertion прошли.
+Исходник: [`PostmanEchoSimulation.java`](gatling/src/test/java/ru/mts/itmo/aqa/load/PostmanEchoSimulation.java).
 
-**Точка деградации.** В диапазоне 5–20 пользователей деградации нет:
-Throughput растёт, latency и p95 стабильны, ошибок нет. Момент, когда
-Throughput перестаёт расти, а latency/Error Rate начинают увеличиваться,
-в эксперименте не достигнут. Для его поиска нужен больший уровень нагрузки
-или локальный стенд; на публичном demo-сервисе сознательно не повышали
-нагрузку выше 20 пользователей.
+| VU | Запросов | Throughput, req/s | Average, мс | Median, мс | p95, мс | Errors |
+| --- | --- | --- | --- | --- | --- | --- |
+| 5 | 242 | 4.03 | 198 | 186 | 237 | 0% |
+| 10 | 457 | 7.62 | 212 | 187 | 243 | 0% |
+| 20 | 845 | 14.08 | 195 | 185 | 216 | 0% |
 
-**Вывод.** В выбранном диапазоне 5–20 пользователей (до ~14 req/s) API
-работает стабильно: пропускная способность масштабируется почти линейно,
-p95 не превышает 216 мс в прогретом режиме, ошибок нет. Диапазон можно
-считать стабильным; признаков насыщения или деградации не обнаружено.
+[HTML-отчёт Gatling (20 VU)](gatling/report/index.html)
 
-## Воспроизводимость
+![Gatling HTML Report](images/gatling-summary.png)
 
-1. Установить JMeter 5.6.x, добавить `bin` в `PATH` или задать `JMETER_HOME`.
-2. Из корня репозитория выполнить `.\load-tests\run-load-test.ps1`
-   (Windows) или `./load-tests/run-load-test.sh` (Linux/macOS).
-3. Сравнить полученные JTL с `results/*.jtl`; отчёт последнего запуска
-   появится в `load-tests/report`.
+### Сравнение
 
-Абсолютные значения зависят от сети и текущей загрузки demo-сервиса, но при
-повторном запуске ожидаются те же качественные результаты: линейный рост
-Throughput, стабильные latency/p95 и отсутствие ошибок в диапазоне 5–20
-пользователей.
+- **Профиль и проверки совпадают.** Throughput практически одинаков: 3.9/7.9/14.2 против 4.03/7.62/14.08 req/s; на 10/20 VU p95 205/216 мс у JMeter и 243/216 мс у Gatling; ошибок нет.
+- **Подход.** JMeter: XML-план, GUI/CLI, CSV Data Set, Constant Timer, Response Assertion. Gatling: код на Java DSL, Maven-модуль, feeder, `pause`, checks; сценарий компактнее и удобнее для code review, но требует JDK/Maven.
+- **5 VU.** У JMeter p95 528 мс из-за холодного старта; у Gatling 237 мс. На 10 VU у Gatling среднее 212 мс из-за двух выбросов до 3.6 с, p95 при этом 243 мс.
+
+## Вывод
+
+В диапазоне 5-20 VU (до ~14 req/s) API стабилен: Throughput растёт почти линейно, p95 не превышает 243 мс, Error Rate 0%. Момент деградации не достигнут; для его поиска нужен больший уровень нагрузки или локальный стенд.
+
+## Воспроизведение
+
+- JMeter: `.\load-tests\run-load-test.ps1` или `./load-tests/run-load-test.sh`.
+- Gatling: `cd load-tests/gatling && mvn gatling:test ...`; скрипты `run-gatling.ps1` / `run-gatling.sh`.
+- Абсолютные значения зависят от сети и demo-сервиса; ожидаемое поведение - линейный рост Throughput и отсутствие ошибок.
