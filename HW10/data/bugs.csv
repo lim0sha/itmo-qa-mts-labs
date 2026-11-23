@@ -1,0 +1,16 @@
+id,severity,where,status
+HW-01,Critical,prod,Closed
+HW-02,Blocker,prod,Closed
+HW-03,Critical,prod,Closed
+HW-04,Major,prod,Closed
+HW-05,Minor,prod,Closed
+HW-06,Critical,test,Closed
+HW-07,Blocker,test,Closed
+HW-08,Major,test,Closed
+HW-09,Major,test,Closed
+HW-10,Minor,test,Closed
+HW-11,Minor,test,Closed
+HW-12,Major,test,Closed
+HW-13,Blocker,prod,Open
+HW-14,Critical,prod,InProgress
+HW-15,Major,test,Open

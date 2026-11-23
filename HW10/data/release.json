@@ -1,0 +1,11 @@
+{
+  "period": "отдельный учебный релиз, данные не суммируются с bugs.csv",
+  "closed_bugs": 160,
+  "crit_prod": 8,
+  "reopened": 24,
+  "requirements": 48,
+  "covered": 40,
+  "test_cases": 500,
+  "actual": 375,
+  "automated": 240
+}
